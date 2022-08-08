@@ -16,6 +16,12 @@ infile    = 'resources_array.cfg'
 cpus_per_node_lim = 56 # No more than this many CPUs per node
 # Need to check the nodes your system has available and how many CPUs they have
 
+max_arr = 100   # set the maximum number of paris (job arrays) being run at the same time (avoid I/O issue)
+                # This is equivalent to `--ArrayTaskThrottle` mentioned here
+                #   (https://stackoverflow.com/questions/55430330/slurm-changing-the-maximum-number-of-simultaneously-running-tasks-for-a-running)
+                #   (https://help.rc.ufl.edu/doc/SLURM_Job_Arrays)
+
+
 
 df         = pd.read_table(infile,header=0,delim_whitespace=True)
 df.columns = df.columns.str.replace('#', '') # Remove comment character from column names
@@ -63,6 +69,7 @@ for index, row in df.iterrows():
             "step_script":step_script,
             "step_index":index+1,
             "cmd_num":cmd_num,
+            "max_arr":max_arr,
             "gres":row['Gres'],
             "mem":row['Mem_per_cpu']
             }
@@ -88,7 +95,7 @@ for index, row in df.iterrows():
 #SBATCH --output={log_name}                         # Format of output file (%j = job id)
 #SBATCH --mail-user=blablabla@caltech.edu           # my email address
 #SBATCH --mail-type=FAIL
-#SBATCH --array=1-{cmd_num}
+#SBATCH --array=1-{cmd_num}%{max_arr}
 
 
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE

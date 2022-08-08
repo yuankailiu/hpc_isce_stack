@@ -1,35 +1,36 @@
-# hpc_isce_stack
+# HPC_isce_stack
 
 
-############################################################
-# Author: Oliver Stephenson, 2021                          #
-############################################################
+### Author: Oliver Stephenson, 2021
 
 
 Scripts for submitting tops stack stages as a series of chained SLURM jobs
 Each job uses SLURM arrays to manage the processing that can be done in parallel
 Avoids the issue with wasting resources, hopefully deals better with very large numbers of jobs
 
-The 'resources_array.cfg' file gives the resources allocated to each array element, not to the whole job step combined
+The `resources_array.cfg` file gives the resources allocated to each array element, not to the whole job step combined
 
-Different resource files are for different sized jobs - resources_array_full_eff.cfg is the efficient ('eff') allocation of resources for the full T115a track (25 to 32N)
+Different resource files are for different sized jobs - `resources_array_full_eff.cfg` is the efficient ('eff') allocation of resources for the full T115a track (25 to 32N)
 
 
-:: Notes before running processing codes ::
+## Optional before running processing codes
 (ykliu 2022-03-08)
 
-0. run `s1_select_ion.py` to get the starting ranges for each subswath for each frame (SLC). Save output to a txt file.
-        This is only for information, the output does not serve directly as input to stackSentinel.py
+0. Run [`s1_select_ion.py`](https://github.com/isce-framework/isce2/tree/main/contrib/stack/topsStack#1-select-the-usable-acquistions) to filter your data acquisitions (SLC zip files). Acquisitions not satisfying the requirements would be put into a separate `not_used` folders and they are not used by `stackSentinel.py`. The filering is based on the:
+    + IPF versions
+    + Frames with different IPF versions
+    + gaps between frames
+    + starting ranges
+    + latitude coverage
 
-1. Use the appropriate .cfg for resourse allocation. Copy the customed .cfg to overwrite 'resources_array.cfg'
+1. Use the appropriate .cfg for resourse allocation. Copy the customed .cfg to overwrite `resources_array.cfg`
+    + run_16_unwrap         set to 3 hr for long tracks (more than 6~7 latitude degrees)
+    + run_20_unwrap_ion     set to 3 hr for long tracks (more than 6~7 latitude degrees)
+    + run_23_filtIon        set memory usage to 30G     (more than 6~7 latitude degrees)
 
-    - run_16_unwrap         set to 3 hr for long tracks
-    - run_20_unwrap_ion     set to 3 hr for long tracks
-    - run_23_filtIon        set memory usage to 30G
+2. `stack_sentinel_cmd.sh`: the bbox `-b` corresponds to the `-b` argument in `stackSentinel.py`. It will process all frames that intersect with this bbox.
 
-2. `stack_sentinel_cmd.sh`: the bbox `-b` is smaller than the image overlapping area in the SN direction
-
-3. Remove the pairs with gaps using `-x` option in `stackSentienl-.py`from `S1_version.py` output
+3. Remove extra pairs by using `-x` option in `stackSentienl.py`.
 
 4. `stack_sentinel_cmd.sh`: add  `--polarization hh` for Antartica data (HH polarization)
 
